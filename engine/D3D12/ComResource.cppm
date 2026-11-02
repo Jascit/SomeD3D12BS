@@ -98,7 +98,7 @@ template <typename ComObj> class ComResource
         }
     }
 
-    [[nodiscard]] auto get_name() noexcept -> std::string
+    [[nodiscard]] auto get_name() const noexcept -> std::string
     {
         if (interface_ == nullptr)
         {

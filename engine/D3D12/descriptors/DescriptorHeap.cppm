@@ -39,31 +39,38 @@ template <D3D12_DESCRIPTOR_HEAP_TYPE HType> class DescriptorHeap : public ComRes
         descriptor_heap_desc.Flags = flags;
         descriptor_heap_desc.NodeMask = 0;
 
-        ComPtr<interface_type> descriptor_heap;
-        HRESULT result = device->CreateDescriptorHeap(&descriptor_heap_desc, IID_PPV_ARGS(&descriptor_heap));
+        DescriptorHeap descriptor_heap;
+        HRESULT result = device->CreateDescriptorHeap(&descriptor_heap_desc, IID_PPV_ARGS(descriptor_heap.put()));
         if (FAILED(result))
         {
-            core::diagnostics::log_error("Failed to create descriptor heap! HRESULT: {}", result);
-            return {nullptr, nullptr, 0, 0, false};
+            core::diagnostics::log_error("Failed to create descriptor heap! Name: {}, HRESULT: {}", name, result);
+            return {};
         }
-        std::uint32_t descriptor_size = device->GetDescriptorHandleIncrementSize(HType);
-        return {std::move(descriptor_heap), name, count, descriptor_size,
-                static_cast<bool>(flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)};
+        descriptor_heap.increment_ = device->GetDescriptorHandleIncrementSize(HType);
+        descriptor_heap.is_shader_visible_ = flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        descriptor_heap.descriptor_count_ = count;
+        descriptor_heap.start_handle_cpu_ = descriptor_heap.get()->GetCPUDescriptorHandleForHeapStart();
+        if (descriptor_heap.is_shader_visible_)
+        {
+            descriptor_heap.start_handle_gpu_ = descriptor_heap.get()->GetGPUDescriptorHandleForHeapStart();
+        }
+        descriptor_heap.set_name(name);
+        return descriptor_heap;
     }
 #pragma endregion
 
-    [[nodiscard]] auto getCPUHandle(std::uint32_t index) const noexcept -> D3D12_CPU_DESCRIPTOR_HANDLE
+    [[nodiscard]] auto cpu_handle(std::uint32_t index) const noexcept -> D3D12_CPU_DESCRIPTOR_HANDLE
     {
         if (index >= descriptor_count_)
         {
             core::diagnostics::log_warning(
-                "Descriptor index out of bounds: index {} is invalid (total descriptors: {})", index,
-                descriptor_count_);
+                "Descriptor(Name: {}) index out of bounds: index {} is invalid (total descriptors: {})",
+                this->get_name(), index, descriptor_count_);
             return {};
         }
-        return {start_handle_cpu_.ptr + (static_cast<SIZE_T>(descriptor_size_ * index))};
+        return {start_handle_cpu_.ptr + (static_cast<SIZE_T>(increment_ * index))};
     }
-    [[nodiscard]] auto getGPUHandle(std::uint32_t index) const noexcept -> D3D12_GPU_DESCRIPTOR_HANDLE
+    [[nodiscard]] auto gpu_handle(std::uint32_t index) const noexcept -> D3D12_GPU_DESCRIPTOR_HANDLE
     {
         if (!is_shader_visible_)
         {
@@ -77,25 +84,14 @@ template <D3D12_DESCRIPTOR_HEAP_TYPE HType> class DescriptorHeap : public ComRes
                 descriptor_count_);
             return {};
         }
-        return {start_handle_gpu_.ptr + (static_cast<SIZE_T>(descriptor_size_ * index))};
+        return {start_handle_gpu_.ptr + (static_cast<SIZE_T>(increment_ * index))};
     }
 
   private:
-    DescriptorHeap(ComPtr<interface_type> &&other, const char *name, std::uint32_t count, std::uint32_t size,
-                   bool is_shader_visible) noexcept
-        : base(std::move(other), name), descriptor_count_(count), descriptor_size_(size),
-          start_handle_cpu_(interface_->GetCPUDescriptorHandleForHeapStart()), is_shader_visible_(is_shader_visible)
-    {
-        if (is_shader_visible_)
-        {
-            start_handle_gpu_ = interface_->GetGPUDescriptorHandleForHeapStart();
-        }
-    }
-
     D3D12_CPU_DESCRIPTOR_HANDLE start_handle_cpu_{};
     D3D12_GPU_DESCRIPTOR_HANDLE start_handle_gpu_{};
     std::uint32_t descriptor_count_{};
-    std::uint32_t descriptor_size_{};
+    std::uint32_t increment_{};
     bool is_shader_visible_ = false;
 };
 

@@ -131,10 +131,10 @@ int main()
     {
         return 1;
     }
-    const d3d12::SwapChainConfig swap_chain_config =
-        d3d12::SwapChainConfig::makeDefault(window.get_width(), window.get_height());
-    auto swap_chain = d3d12::SwapChain::create(std::move(rtv_descriptor_heap), &renderer_context, "swap_chain",
-                                               swap_chain_config, window.get_system_handle());
+    const d3d12::SwapChainDesc swap_chain_config =
+        d3d12::SwapChainDesc::defaults(window.get_width(), window.get_height());
+    auto swap_chain =
+        d3d12::SwapChain::create(&renderer_context, "swap_chain", swap_chain_config, window.get_system_handle());
     if (!swap_chain)
     {
         return 1;
@@ -229,7 +229,7 @@ int main()
     srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
     renderer_context.device()->CreateShaderResourceView(rainbow_texture.get(), &srv_desc,
-                                                        srv_uav_descriptor_heap.getCPUHandle(0));
+                                                        srv_uav_descriptor_heap.cpu_handle(0));
 
     auto footprint = d3d12::get_copyable_footprints(renderer_context.device(), rainbow_texture->GetDesc(), 0, 1, 0);
 
@@ -294,7 +294,7 @@ int main()
     depth_stencil_view_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 
     renderer_context.device()->CreateDepthStencilView(depth_stencil.get(), &depth_stencil_view_desc,
-                                                      dsv_descriptor_heap.getCPUHandle(0));
+                                                      dsv_descriptor_heap.cpu_handle(0));
 #pragma endregion
 
     MSG msg;
@@ -337,7 +337,7 @@ int main()
         command_list->Reset(command_allocators[frame_index].get(), nullptr);
 
         D3D12_RESOURCE_BARRIER barrier_to_rtv{};
-        barrier_to_rtv.Transition.pResource = swap_chain.getBuffer(frame_index);
+        barrier_to_rtv.Transition.pResource = swap_chain.current_back_buffer();
         barrier_to_rtv.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
         barrier_to_rtv.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier_to_rtv.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -345,14 +345,14 @@ int main()
 
         command_list->ResourceBarrier(1, &barrier_to_rtv);
 
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = swap_chain.getRTVDescriptorHandle(frame_index);
-        D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle = dsv_descriptor_heap.getCPUHandle(0);
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = swap_chain.current_rtv();
+        D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle = dsv_descriptor_heap.cpu_handle(0);
 
         command_list->OMSetRenderTargets(1, &rtv_handle, FALSE, &dsv_handle);
 
         float clear_color[4] = {1.0f, 0.5f, 0.5f, 1.0f};
         command_list->ClearRenderTargetView(rtv_handle, clear_color, 0, nullptr);
-        command_list->ClearDepthStencilView(dsv_descriptor_heap.getCPUHandle(0), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0,
+        command_list->ClearDepthStencilView(dsv_descriptor_heap.cpu_handle(0), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0,
                                             nullptr);
 
         D3D12_VIEWPORT viewport = {};
@@ -386,14 +386,13 @@ int main()
         XMFLOAT4X4 wvp;
         XMStoreFloat4x4(&wvp, XMMatrixTranspose(world * view * proj));
 
-
         ID3D12DescriptorHeap *pp_descriptors_heap[] = {srv_uav_descriptor_heap.get()};
         command_list->SetPipelineState(pso.get());
         command_list->SetGraphicsRootSignature(root_signature.get());
         command_list->SetDescriptorHeaps(1, pp_descriptors_heap);
         command_list->SetGraphicsRoot32BitConstants(0, 16, &wvp, 0);
         command_list->SetGraphicsRoot32BitConstants(2, 1, &angle, 0);
-        command_list->SetGraphicsRootDescriptorTable(1, srv_uav_descriptor_heap.getGPUHandle(0));
+        command_list->SetGraphicsRootDescriptorTable(1, srv_uav_descriptor_heap.gpu_handle(0));
 
         command_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         command_list->IASetVertexBuffers(0, 1, &vb_view);
@@ -401,7 +400,7 @@ int main()
         command_list->DrawIndexedInstanced(indexes_count, 1, 0, 0, 0);
 
         D3D12_RESOURCE_BARRIER barrier_to_present{};
-        barrier_to_present.Transition.pResource = swap_chain.getBuffer(frame_index);
+        barrier_to_present.Transition.pResource = swap_chain.current_back_buffer();
         barrier_to_present.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier_to_present.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
         barrier_to_present.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;

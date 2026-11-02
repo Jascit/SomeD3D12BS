@@ -96,20 +96,15 @@ class ShaderCompiler
                                          static_cast<unsigned long>(result));
             return {};
         }
-        return {std::move(compiler)};
+        return compiler;
     }
 
-    [[nodiscard]] auto compile_shader(const std::vector<BYTE> &data,
-                                      SHADER_TYPE shader_type) -> Shader
+    [[nodiscard]] auto compile_shader(const std::vector<BYTE> &data, SHADER_TYPE shader_type) -> Shader
     {
-        LPCWSTR args[] = {L"",
-                          L"-E",
-                          shader_type_to_entry(shader_type),
-                          L"-T",
-                          shader_type_to_profile(shader_type),
+        LPCWSTR args[] = {
+            L"",    L"-E",           shader_type_to_entry(shader_type), L"-T", shader_type_to_profile(shader_type),
 #ifdef DEBUG
-                          L"-Zi",
-                          L"-Qembed_debug"
+            L"-Zi", L"-Qembed_debug"
 #endif
         };
 
@@ -125,8 +120,8 @@ class ShaderCompiler
         if ((errors != nullptr) && errors->GetStringLength() > 0)
         {
             auto error_msg = static_cast<const char *>(errors->GetStringPointer());
-            core::diagnostics::log_error("Couldn't compile shader (Type: {}), with error:\n{}", static_cast<std::uint32_t>(shader_type),
-                                         error_msg);
+            core::diagnostics::log_error("Couldn't compile shader (Type: {}), with error:\n{}",
+                                         static_cast<std::uint32_t>(shader_type), error_msg);
             return {nullptr};
         }
 

@@ -22,10 +22,7 @@ class Factory : public ComResource<IDXGIFactory6>
     using base = ComResource;
 
   public:
-    Factory() noexcept = default;
     static auto create(const char *name) noexcept -> Factory;
 
-  private:
-    Factory(base &&other) noexcept;
 };
 } // namespace d3d12

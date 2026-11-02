@@ -15,12 +15,11 @@ module d3d12.resources;
 import core.log;
 using namespace d3d12;
 
-ResourceFactory::ResourceFactory(ID3D12Device *device) noexcept : device_(device)
+ResourceFactory ResourceFactory::create(ID3D12Device *device) noexcept
 {
-}
-ResourceFactory ResourceFactory::create(ID3D12Device* device) noexcept
-{
-    return {device};
+    ResourceFactory resource_factory{};
+    resource_factory.device_ = device;
+    return resource_factory;
 }
 
 DepthStencil ResourceFactory::create_depth_stencil(const DepthStencilDesc &desc) noexcept
@@ -48,8 +47,8 @@ DepthStencil ResourceFactory::create_depth_stencil(const DepthStencilDesc &desc)
 
     DepthStencil depth_stencil;
     HRESULT result = device_->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc,
-                                                             D3D12_RESOURCE_STATE_DEPTH_WRITE, &clear_value,
-                                                             IID_PPV_ARGS(depth_stencil.put()));
+                                                      D3D12_RESOURCE_STATE_DEPTH_WRITE, &clear_value,
+                                                      IID_PPV_ARGS(depth_stencil.put()));
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create depth stencil buffer! Name: {}, HRESULT: 0x{:08X}", desc.name,
@@ -79,9 +78,9 @@ UploadBuffer ResourceFactory::create_upload_buffer(const UploadBufferDesc &desc)
     resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
     UploadBuffer upload_buffer;
-    HRESULT result = device_->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc,
-                                                             D3D12_RESOURCE_STATE_COMMON, nullptr,
-                                                             IID_PPV_ARGS(upload_buffer.put()));
+    HRESULT result =
+        device_->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc,
+                                         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(upload_buffer.put()));
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create upload buffer! Name: {}, HRESULT: 0x{:08X}", desc.name,
@@ -119,8 +118,8 @@ RenderTarget ResourceFactory::create_render_target(const RenderTargetDesc &desc)
 
     RenderTarget render_target;
     HRESULT result = device_->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc,
-                                                             D3D12_RESOURCE_STATE_RENDER_TARGET, &clear_value,
-                                                             IID_PPV_ARGS(render_target.put()));
+                                                      D3D12_RESOURCE_STATE_RENDER_TARGET, &clear_value,
+                                                      IID_PPV_ARGS(render_target.put()));
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create depth stencil buffer! Name: {}, HRESULT: 0x{:08X}", desc.name,
@@ -149,9 +148,9 @@ Texture2D ResourceFactory::create_texture_2d(const Texture2DDesc &desc) noexcept
     resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
     Texture2D texture;
-    HRESULT result = device_->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE,
-                                                                    &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                    nullptr, IID_PPV_ARGS(texture.put()));
+    HRESULT result =
+        device_->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc,
+                                         D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(texture.put()));
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create texture2D! Name: {}, HRESULT: 0x{:08X}", desc.name,

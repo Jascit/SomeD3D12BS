@@ -270,8 +270,6 @@ using RootSamplers = DescList<RootSamplerDesc>;
 
 class RootSignature : public ComResource<ID3D12RootSignature>
 {
-    using base = ComResource;
-
   public:
     [[nodiscard]] static auto create(ID3D12Device *device, const char *name, const RootParameters &root_parameters,
                                      const RootSamplers &root_samplers, D3D12_ROOT_SIGNATURE_FLAGS flags) noexcept
@@ -297,7 +295,7 @@ class RootSignature : public ComResource<ID3D12RootSignature>
             return {};
         }
 
-        base root_signature;
+        RootSignature root_signature;
         HRESULT result =
             device->CreateRootSignature(0, root_signature_blob->GetBufferPointer(),
                                         root_signature_blob->GetBufferSize(), IID_PPV_ARGS(root_signature.put()));
@@ -308,7 +306,7 @@ class RootSignature : public ComResource<ID3D12RootSignature>
             return {};
         }
         root_signature.set_name(name);
-        return {std::move(root_signature)};
+        return root_signature;
     }
 };
 

@@ -28,6 +28,5 @@ struct Texture2DDesc
 
 class Texture2D : public ComResource<ID3D12Resource>
 {
-  public:
 };
 } // namespace d3d12

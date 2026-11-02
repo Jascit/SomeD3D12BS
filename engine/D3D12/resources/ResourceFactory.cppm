@@ -28,7 +28,6 @@ class ResourceFactory
     [[nodiscard]] Texture2D create_texture_2d(const Texture2DDesc &desc) noexcept;
 
   private:
-    ResourceFactory(ID3D12Device *device) noexcept;
     ID3D12Device *device_;
 };
 } // namespace d3d12

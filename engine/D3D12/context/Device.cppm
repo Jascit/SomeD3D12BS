@@ -23,10 +23,7 @@ class Device : public ComResource<ID3D12Device>
     using base = ComResource;
 
   public:
-    Device() noexcept = default;
     static auto create(IDXGIFactory6 *factory, const char *name) noexcept -> Device;
 
-  private:
-    Device(base &&other) noexcept;
 };
 }; // namespace d3d12

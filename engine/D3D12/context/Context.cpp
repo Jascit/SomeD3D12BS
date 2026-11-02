@@ -54,19 +54,16 @@ namespace
 // :device
 auto Device::create(IDXGIFactory6 *factory, const char *name) noexcept -> Device
 {
-    base device;
+    Device device;
     HRESULT result = create_high_perf_device(factory, device.put());
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create device! Name: {}, HRESULT: {}", name,
                                      static_cast<std::uint32_t>(result));
-        return {{}};
+        return {};
     }
-    return {std::move(device)};
-}
-
-Device::Device(base &&other) noexcept : base(std::move(other))
-{
+    device.set_name(name);
+    return device;
 }
 
 //: CommandQueue
@@ -81,35 +78,29 @@ auto CommandQueue::create(ID3D12Device *device, const char *name, D3D12_COMMAND_
     desc.Priority = priority;
     desc.NodeMask = 0;
 
-    base command_queue;
+    CommandQueue command_queue;
     HRESULT result = device->CreateCommandQueue(&desc, IID_PPV_ARGS(command_queue.put()));
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create command queue! HRESULT: {}", result);
-        return {{}};
+        return {};
     }
     command_queue.set_name(name);
-    return {std::move(command_queue)};
-}
-
-CommandQueue::CommandQueue(base &&other) noexcept : base(std::move(other))
-{
+    return command_queue;
 }
 
 // :Factory
 auto Factory::create(const char *name) noexcept -> Factory
 {
-    base factory;
+    Factory factory;
     HRESULT result = CreateDXGIFactory(IID_PPV_ARGS(factory.put()));
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create DXGI Factory! Name: {}, HRESULT: {}", name, result);
-        return {{}};
+        return {};
     }
-    return {std::move(factory)};
-}
-Factory::Factory(base &&other) noexcept : base(std::move(other))
-{
+    factory.set_name(name);
+    return factory;
 }
 
 Fence::~Fence() noexcept
@@ -121,7 +112,7 @@ Fence::~Fence() noexcept
 }
 
 Fence::Fence(Fence &&other) noexcept
-    : fence_event_(std::exchange(other.fence_event_, nullptr)), fence_value_(other.fence_value_)
+    : base(std::move(other)), fence_event_(std::exchange(other.fence_event_, nullptr)), fence_value_(other.fence_value_)
 {
 }
 auto Fence::operator=(Fence &&other) noexcept -> Fence &
@@ -129,7 +120,9 @@ auto Fence::operator=(Fence &&other) noexcept -> Fence &
     if (this != &other)
     {
         if (fence_event_)
+        {
             CloseHandle(fence_event_);
+        }
         ComResource::operator=(std::move(other));
         fence_event_ = std::exchange(other.fence_event_, nullptr);
     }
@@ -138,17 +131,17 @@ auto Fence::operator=(Fence &&other) noexcept -> Fence &
 
 Fence Fence::create(ID3D12Device *device, const char *name) noexcept
 {
-    base fence;
+    Fence fence;
     HRESULT result = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence.put()));
     if (FAILED(result))
     {
         core::diagnostics::log_error("Failed to create fence! Name: {}, HRESULT: 0x{:08X}", name,
                                      static_cast<std::uint32_t>(result));
-        return Fence({}, nullptr);
+        return {};
     }
-    HANDLE event = CreateEventA(nullptr, 0, 0, nullptr);
+    fence.fence_event_ = CreateEventA(nullptr, 0, 0, nullptr);
     fence.set_name(name);
-    return {std::move(fence), event};
+    return fence;
 }
 
 std::uint64_t Fence::add_fetch() noexcept
@@ -169,10 +162,6 @@ std::uint64_t Fence::get_value() noexcept
 HANDLE Fence::get_event() noexcept
 {
     return fence_event_;
-}
-
-Fence::Fence(base &&other, HANDLE event) noexcept : base(std::move(other)), fence_event_(event)
-{
 }
 
 auto Context::create() noexcept -> Context

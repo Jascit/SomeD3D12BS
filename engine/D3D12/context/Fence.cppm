@@ -35,9 +35,7 @@ class Fence : public ComResource<ID3D12Fence1>
     [[nodiscard]] std::uint64_t get_value() noexcept;
     [[nodiscard]] HANDLE get_event() noexcept;
 
-  private:
-    Fence(base &&other, HANDLE event) noexcept;
-
+private:
     std::uint64_t fence_value_{};
     HANDLE fence_event_{};
 };

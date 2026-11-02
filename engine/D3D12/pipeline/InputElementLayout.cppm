@@ -90,15 +90,6 @@ class InputElementLayout
     using data_t = std::unique_ptr<D3D12_INPUT_ELEMENT_DESC[]>;
 
   public:
-#pragma region rule_of_5
-    ~InputElementLayout() noexcept = default;
-    InputElementLayout() noexcept = default;
-    InputElementLayout(InputElementLayout &&other) noexcept = default;
-    InputElementLayout(const InputElementLayout &other) noexcept = delete;
-    auto operator=(const InputElementLayout &other) noexcept -> InputElementLayout & = delete;
-    auto operator=(InputElementLayout &&other) noexcept -> InputElementLayout & = default;
-#pragma endregion
-
     static auto create(const VertexShader &shader, IDxcUtils *dxc_utils) noexcept -> InputElementLayout
     {
         DxcBuffer reflection_buffer;
@@ -158,12 +149,12 @@ class InputElementLayout
 
     [[nodiscard]] auto desc() const noexcept -> D3D12_INPUT_LAYOUT_DESC
     {
-        return {elements_.data(), static_cast<UINT>(elements_.size())};
+        return {.pInputElementDescs = elements_.data(), .NumElements = static_cast<UINT>(elements_.size())};
     }
 
     explicit operator bool() const noexcept
     {
-        return elements_.size() != 0;
+        return !elements_.empty();
     }
 
   private:

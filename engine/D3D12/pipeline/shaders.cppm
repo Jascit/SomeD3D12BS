@@ -10,9 +10,8 @@
  */
 module;
 #include <windows.h>
-#include <d3d12.h>
-#include <wrl/client.h>
 #include <dxcapi.h>
+#include <wrl/client.h>
 export module d3d12.pipeline:shaders;
 import core.log;
 import d3d12.com_resource;
