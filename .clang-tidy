@@ -1,4 +1,7 @@
+---
 HeaderFilterRegex: '.*'
+ExcludeHeaderFilterRegex: '.*(Windows Kits|Microsoft Visual Studio|_deps).*'
+
 Checks: >
   -*,
   clang-diagnostic-*,
@@ -9,38 +12,56 @@ Checks: >
   performance-*,
   readability-*,
   misc-*,
+  -bugprone-easily-swappable-parameters,
   -cppcoreguidelines-avoid-magic-numbers,
-  -readability-magic-numbers
+  -readability-magic-numbers,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-explicit-virtual-functions,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-macro-to-enum,
+  -cppcoreguidelines-use-default-member-init,
+  -readability-identifier-length,
+  -misc-include-cleaner,
+  -modernize-use-trailing-return-type
 
 CheckOptions:
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConceptCase
+    value: lower_case
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
 
-  - key: readability-identifier-naming.GlobalFunctionCase
+  - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.MethodCase
-    value: camelBack
-  - key: readability-identifier-naming.PrivateMethodCase
-    value: lower_case
-  - key: readability-identifier-naming.PrivateMethodSuffix
-    value: _
-
-  - key: readability-identifier-naming.ParameterCase
     value: lower_case
 
   - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
     value: lower_case
   - key: readability-identifier-naming.MemberCase
     value: lower_case
   - key: readability-identifier-naming.PrivateMemberSuffix
     value: _
+  - key: readability-identifier-naming.ProtectedMemberSuffix
+    value: _
 
-  - key: readability-identifier-naming.GlobalConstantCase
+  - key: readability-identifier-naming.MacroDefinitionCase
     value: UPPER_CASE
-  - key: readability-identifier-naming.MemberConstantCase
-    value: CamelCase
-  - key: readability-identifier-naming.LocalConstantCase
-    value: lower_case
-
-  - key: readability-identifier-naming.NamespaceCase
-    value: lower_case

@@ -9,11 +9,16 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 add_library(AllTestsTogether OBJECT
-        d3d12/stream.cpp)
+        d3d12/stream.cpp
+        d3d12/set_name_test.cpp
+)
+
 target_link_libraries(AllTestsTogether PRIVATE
         Catch2)
 target_link_libraries(AllTestsTogether PRIVATE
-        AllShitTogether)
+        Core
+        # D3D12
+        Assets)
 
 add_executable(tests tests.cpp)
 target_link_libraries(tests PRIVATE

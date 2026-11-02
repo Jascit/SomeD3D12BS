@@ -63,7 +63,11 @@ else ()
     MESSAGE(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif ()
 
-add_subdirectory(core)
+add_subdirectory(engine/core)
+add_subdirectory(engine/D3D12)
+add_subdirectory(engine/assets)
+add_subdirectory(engine/platform)
+add_subdirectory(engine/app)
 
 add_subdirectory(tests)
 
